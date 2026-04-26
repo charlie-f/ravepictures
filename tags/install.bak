@@ -1,0 +1,115 @@
+<?php
+############################################################
+#                     Fusion Tags v.1.0                    #
+#----------------------------------------------------------#
+#          Author:    J.C.				                   #
+#          E-mail:    webmaster@fusionphp.org              #
+#          Website:   http://www.fusionphp.org/            #
+#----------------------------------------------------------#                                                
+############################################################
+######################  Copyrights  ########################
+############################################################
+#                     Fusion Scripts                       #
+#----------------------------------------------------------#
+#                This Script is NOT Freeware.              #
+#      Please read the license.txt file for more info.     #
+############################################################
+
+	if(phpversion()<4.1){
+	 $_SERVER = $HTTP_SERVER_VARS;
+	 $_POST = $HTTP_POST_VARS;
+	 $_GET = $HTTP_GET_VARS;
+	}
+	if(!$_GET[step]){
+	 $step = $_POST[step];
+	} else {
+	 $step = $_GET[step];
+	}
+	if(!$step){
+	 $step="1";
+	} elseif ($step=="2") {
+	 $domain = eregi_replace("www.","",$_SERVER[HTTP_HOST]);
+	 $domain = ".".$domain;
+	 setCookie("password",$_POST[password],time()+(365*(3600*24)),"/",$domain);
+	}
+	echo "<style>BODY,TD{font-family: verdana; font-size: 8pt}</style><center><b>Ditto Tags 1.0 Installation: Step $step of 2</b><br><a href=\"http://www.fusionphp.org/\" target=\"_blank\">Fusion Scripts</a><hr>";
+	if($step=="1"){
+		function UploadTableRow ($file){
+			if(file_exists($file)){
+			 echo "<tr><td>$file</td><td><font color=\"green\">Uploaded</font></td></tr>";
+			} else {
+			 echo "<tr><td>$file</td><td><font color=\"red\">Not Found</td></tr>";
+			}
+		}
+	 echo "Checking all nessacary files have been uploaded:<br><table cellpadding=1 cellspacing=0 border=1 width=\"500\">";
+	 echo "<tr><td width=\"70%\"><b>File</b></td><td width=\"30%\"><b>Result</b></td></tr>";
+	 UploadTableRow ("admin.php");
+	 UploadTableRow ("badwords.txt");
+	 UploadTableRow ("config.php");
+	 UploadTableRow ("help.php");
+	 UploadTableRow ("tags.php");
+	 UploadTableRow ("posts.dat");
+	 echo "</table><br>If all the results were \"Uploaded\" chmod <b>badwords.txt</b>,<b>config.php</b> and <b>post.dat</b> to <b>666</b> before continuing with the next step";
+	 echo "<form action=\"$_SERVER[PHP_SELF]?step=2\" method=\"post\"><b>Change admin password now!</b> You will automatically be taken to step 2 after filling in the form:<br><input type=\"text\" name=\"password\" value=\"Password\"> <input type=\"submit\" value=\"Step 2\"></form>";
+	} elseif($step=="2") {
+	 echo "Attempting to write to config.php...<br><br>";
+		$_POST[password] = md5($_POST[password]);
+		if($ofile = fopen("config.php","w")){
+		 $data = "<?php
+\$data_file = \"posts.dat\";
+\$adminusername = \"webmaster\";
+\$adminpassword = \"$_POST[password]\";
+\$maxnamelength = 30;
+\$maxpostlength = 355;
+\$maxwordlength = 30;
+\$shouts = 20;
+\$namedefault = \"Your Name\";
+\$urldefault = \"Website\";
+\$header = <<<myscript
+<style>
+BODY,TD {font-family: verdana; font-size: 10px}
+TD.menu {font-weight: bold; color: ffffff; font-size: 10pt}
+INPUT,TEXTAREA {font-family: arial; font-size: 8pt; border: 1px #666666 solid}
+.box3d {background-color: #dddddd; border-color: #ffffff #c0c0c0 #c0c0c0 #ffffff; border-style: solid;
+border-top-width: 1px; border-right-width: 1px; border-bottom-width: 1px; border-left-width: 1px}
+</style>
+<title>::::::: Tags :::::::</title>
+<body leftmargin=\"1\" topmargin=\"1\" rightmargin=\"1\" bottommargin=\"1\" link=\"000000\" vlink=\"000000\">
+myscript;
+\$postheader = <<<myscript
+<table cellpadding=1 cellspacing=0 width=100%>
+myscript;
+\$postbit = <<<myscript
+<tr><td class=\"box3d\" title=\"Posted: <date>\"><name>: <post></td></tr>
+myscript;
+\$postfooter = <<<myscript
+</table>
+myscript;
+\$formbit = <<<myscript
+<center>
+<table cellpadding=\"1\" cellspacing=\"0\" width=\"100%\">
+<tr>
+<form action=\"tags.php?submit=yes\" method=\"post\" onSubmit=\"submitonce();\">
+<td class=\"box3d\">
+ <input type=\"text\" name=\"name\" value=\"<nameCookie>\" maxlength=\"25\" size=\"20\"><br>
+ <input type=\"text\" name=\"url\" value=\"<urlCookie>\" maxlength=\"60\" size=\"20\"><br>
+ <input type=\"text\" name=\"message\" value=\"Message\"><br>
+ <input type=\"submit\" value=\"Tag\"> <input name=\"reset\" type=\"button\" value=\"Reset\" onClick=\"doClearMessage()\"></td>
+</form>
+</tr>
+</table>
+</center>
+myscript;
+\$footer = <<<myscript
+<a href=\"javascript:void(0)\" onClick=\"window.open('help.php','tags','width=175,height=550,scrollbars=yes,resizable=yes')\">Help/Smiles</a> - <a href=\"javascript:void(0)\" onClick=\"window.open('tags.php?all','tags','width=175,height=550,scrollbars=yes,resizable=yes')\">All Messages</a><br>
+<a href=\"http://www.fusionphp.org/\" target=\"_blank\">Fusion Tags 1.0</a>
+myscript;
+?>";
+		 fputs ($ofile, $data);
+		 fclose($ofile);
+		 echo "Config file successfully written to, Password saved!<br><br>All steps have now been completed! Don't forget to check out readme.txt for details on how to administrate your board and how to i-frame it!<br><br><a href=\"admin.php\">Click here to go to admin.php</a><br><br>Please delete <b>install.php</b>, if you dont people can reinstall the script and you wont have control on the board then.";
+		} else {
+		 echo "cannot write to file, please make sure it is chmodded right(666), if it is chmodded right, just quit now";
+		}
+	}
+?>

@@ -1,0 +1,25 @@
+<div align="center"> 
+  <table cellpadding=2 cellspacing=0 border=0 bgcolor="#000000">
+    <form action="/cgi-bin/oneliner.pl" method="POST">
+      <font color="#ffffffff">
+      <input type="hidden" name="file" value="default">
+      </font>
+      <tr bgcolor="#1a1a1a"> 
+        <td colspan=3 align=center> <font face="tahoma, verdana, arial, geneva" size="1" color="#ffffffff"> 
+          <b>Oneliners</b> </font> </td>
+      </tr>
+      <font color="#ffffffff">
+      <!--#include virtual="oneliners_default_incl.shtml"-->
+      </font>
+      <tr bgcolor="#1a1a1a"> 
+        <td colspan=3 valign="middle"> <font face="tahoma, verdana, arial, geneva" size="1" color="#ffffffff"> 
+          msg: 
+          <input type="text" name="msg" maxlength=120 size=30 style="font-family:tahoma,verdana;font-size:10px">
+          who: 
+          <input type="text" name="who" maxlength=10 size=7 style="font-family:tahoma,verdana;font-size:10px">
+          <input type="submit" value="leave msg" style="font-family:tahoma,verdana;font-size:10px" name="submit">
+          </font> </td>
+      </tr>
+    </form>
+  </table>
+</div>

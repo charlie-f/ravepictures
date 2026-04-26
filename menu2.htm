@@ -1,0 +1,75 @@
+<HTML> 
+<HEAD> 
+<TITLE>Rave Menu</TITLE> 
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<META http-equiv="">
+
+</HEAD>
+<BODY TEXT="#000000" LINK="#ffff00" VLINK="#ff00ff" BACKGROUND="back.gif" bgproperties="fixed"> 
+
+<script>
+    // Function to change the source of an image. 
+       function setImage(name, source) { 
+       document.images[name].src = source; 
+       return true; 
+      } 
+</script> 
+
+<CENTER>
+<a href="./opener.htm" TARGET="main" 
+   onMouseOver="setImage('image1', 'main-1.gif')" 
+   onMouseOut="setImage('image1', 'main.gif')" 
+   onClick="return true;"> 
+<img name="image1" border=0 src="main.gif"></A> 
+
+<a href="./menu.htm" TARGET="toc" 
+   onMouseOver="setImage('imagecurrent', 'current-1.gif')" 
+   onMouseOut="setImage('imagecurrent', 'current.gif')" 
+   onClick="return true;"> 
+<img name="imagecurrent" border=0 src="current.gif"></A> 
+
+<a href="./cgi-bin/Ultimate.cgi" TARGET="main"
+   onMouseOver="setImage('bulletin', 'bbs-1.gif')"
+   onMouseOut="setImage('bulletin', 'bbs.gif')" 
+   onClick="return true;"> 
+<img name="bulletin" border=0 src="bbs.gif"></A> 
+
+<a href="./media/index.htm" TARGET="main"
+   onMouseOver="setImage('imagemedia', 'media-1.gif')"
+   onMouseOut="setImage('imagemedia', 'media.gif')" 
+   onClick="return true;"> 
+<img name="imagemedia" border=0 src="media.gif"></A> 
+ 
+<a href="http://raves.halogen.org" TARGET="main"
+   onMouseOver="setImage('event', 'event-1.gif')"
+   onMouseOut="setImage('event', 'event.gif')"
+   onClick="return true;">
+<img name="event" border=0 src="event.gif"></A>
+
+<a href="./about.htm" TARGET="main" 
+   onMouseOver="setImage('imageabout', 'about-1.gif')" 
+   onMouseOut="setImage('imageabout', 'about.gif')" 
+   onClick="return true;"> 
+<img name="imageabout" border=0 src="about.gif"></A> 
+
+<a href="./charliemix.htm" TARGET="main" 
+   onMouseOver="setImage('imagemix', 'charliemix-1.gif')" 
+   onMouseOut="setImage('imagemix', 'charliemix.gif')" 
+   onClick="return true;"> 
+<img name="imagemix" border=0 src="charliemix.gif"></A>
+
+<a href="./faq.htm" TARGET="main"
+   onMouseOver="setImage('imagefaq', 'faq-1.gif')" 
+   onMouseOut="setImage('imagefaq', 'faq.gif')" 
+   onClick="return true;"> 
+<img name="imagefaq" border=0 src="faq.gif"></A> 
+
+<a href="./links.htm" TARGET="main" 
+   onMouseOver="setImage('imagelink', 'links-1.gif')" 
+   onMouseOut="setImage('imagelink', 'links.gif')" 
+   onClick="return true;"> 
+<img name="imagelink" border=0 src="links.gif"></A> 
+ 
+</CENTER>
+</BODY>
+</HTML>

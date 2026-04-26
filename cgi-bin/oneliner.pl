@@ -1,0 +1,359 @@
+#!/usr/bin/perl
+#
+# Oneliner
+#
+# Copyright (c) Stefan Pettersson 2000
+#
+# You may not redistribute this script, but it's free to use and modify.
+#
+# Version History:
+#    v1.1 2000-07-19 - Added archiving, censoring and spam protection
+#    v1.0 2000-07-06 - Added support for multiple files
+#    v0.9 2000-01-26 - Initial public beta version.
+#
+# For more information and other scripts:
+#    http://www.stefan-pettersson.nu/scripts/
+#
+##############################################################################
+
+# Filename(s) to write the messages to. These files are then included each by
+# a HTML page. Very important that the path is correct!
+%files = (
+    'another',  '/oneliner/oneliners_another_incl.html',
+    'default',  '/oneliner/oneliners_incl.shtml'
+    # If modifying, note the missing comma on the last line (the one above this line)
+);
+
+# --------- Archiving --------------
+
+    # Enable archiving (1 = on, 0 = off)
+    $enable_archiving = 0;
+
+    # Same as %files, but for archiving. Note that the same archives must be specified
+    # for all files entered above if archiving is enabled.
+    %archives = (
+        'another',  '../oneliner/archive.shtml',
+        'default',  '../oneliner/archive.shtml'
+        # If modifying, note the missing comma on the last line (the one above this line)
+    );
+
+# --------- Censoring --------------
+
+    # Enable censoring (1 = on, 0 = off)
+    $enable_censor = 1;
+
+    # List of words to censor
+    @badwords = (
+        'shit',
+        'piss off',
+        'fuck'
+        # If modifying, note the missing comma on the last line (the one above this line)
+    );
+
+    # Enable scrambling of bad words (1 = on, 0 = off)
+    $enable_scrambling = 0;
+
+    # The string the bad word will be replaced with when scrambled
+    $scramble_string = '<font color="#ff0000">&lt;censored&gt;</font>';
+
+    # Enable redirection to another URL if a bad word is found (1 = on, 0 = off)
+    $enable_censor_redirection = 0;
+
+    # The URL to redirect to if a bad word is found. Must be complete URL (with http://)
+    $censor_url = 'http://www.yourserver.com/you_use_bad_language_shame_on_you.html';
+
+    # Note: If none of scrambling or redirection is enabled, an entry with a
+    # bad word will simply just not get saved.
+
+# --------- Spam protection --------
+
+    # Enable spam protection (1 = on, 0 = off)
+    $enable_spamprotection = 0;
+
+    # Filename used to save spam information
+    $spamcheck_filename = 'oneliner_spamcheck.txt';
+
+    # Timelimit for what is considered spamming (in seconds), i.e. the time
+    # that must have passed between two postings from the same ip-adress.
+    $spam_timelimit = 3600;
+
+    # Enable redirection to another URL if spam is detected (1 = on, 0 = off)
+    $enable_spam_redirection = 1;
+
+    # The URL to redirect to if spam is detected. Must be complete URL (with http://)
+    $spam_url = 'http://www.yourserver.com/you_spam_shame_on_you.html';
+
+# --------- Customize look ---------
+
+    # How many message should be displayed at once
+    $number_of_rows = 20;
+
+    # How the date and time will be displayed
+    $dateformat = '[monthnameshort] [day], [hour0]:[min0] [ampm]';
+
+    # Names of weekdays
+    @daynames = qw(Sunday Monday Tuesday Wednesday Thursday Friday Saturday);
+
+    # Names of months
+    @monthnames = qw(January February March April May June July August September October November December);
+
+    # Background color of the entered messages, specified in hex as in HTML
+    $bgcolor   = '#000000';
+
+    # Font tag to use for date
+    $font_date = '<font face="tahoma, verdana, arial, geneva" size=1 color="#4FE59D">';
+
+    # Font tag to use for the actual message
+    $font_msg  = '<font face="tahoma, verdana, arial, geneva" size=1 color="#EFEF80">';
+
+    # Font tag to use for the nickname
+    $font_who  = '<font face="tahoma, verdana, arial, geneva" size=1 color="#EF80EF">';
+
+# You do not need to modify anything below this line.
+
+##############################################################################
+
+&ReadParse;
+
+if ($in{'who'} ne "" && $in{'msg'} ne "") {
+
+    # What file to use (use default if no or wrong file is specified in the form)
+    if ($files{$in{'file'}} ne "") {
+        $filename = $files{$in{'file'}};
+        $filename_archive = $archives{$in{'file'}};
+    } else {
+        $in{'file'} = 'default';
+        $filename = $files{'default'};
+        $filename_archive = $archives{$in{'default'}};
+    }
+
+    # Check spamming
+    &spam if ($enable_spamprotection);
+
+    # Check censorship
+    &censor if ($enable_censor);
+
+    # Save entry
+    &saveEntry;
+
+    # Save to archive (if enabled)
+    &saveToArchive if ($enable_archiving);
+
+}
+
+print "Location: $ENV{'HTTP_REFERER'}\n\n";
+
+exit;
+
+##############################################################################
+
+sub saveEntry {
+    # Get previously saved messages (if exists)
+    if (-e $filename) {
+        open(FILE, $filename) || die &PrintErrorPage("Can't open file '$filename'<br>($!)\n");
+        @lines = <FILE>;
+        close(FILE);
+    }
+
+    # Save everything back
+    open(F, ">$filename") || die &PrintErrorPage("Can't write to file '$filename'<br>($!)\n");
+    print F &getEntry;
+
+    for ($i = 0; $i < $number_of_rows - 1; $i++) {
+        print F $lines[$i];
+    }
+
+    close(F);
+}
+
+##############################################################################
+
+sub saveToArchive {
+    open(F, ">>$filename_archive") || die &PrintErrorPage("Can't write to archive file '$filename_archive'<br>($!)\n");
+    print F &getEntry;
+    close(F);
+}
+
+##############################################################################
+
+sub getEntry {
+    my $text;
+
+    # If you want to change the look of how an oneliner entry looks like,
+    # besides changing the variables available at the top of this file,
+    # then this is the place to modify.
+    $text .= '<tr bgcolor="' . $bgcolor . '">';
+    $text .= '<td align=left nowrap>' . $font_date . &GetDateString . '</font></td>';
+    $text .= '<td align=left nowrap>' . $font_msg . $in{'msg'} . '</font></td>';
+    $text .= '<td align=right nowrap>' . $font_who . $in{'who'} . '</font></td>';
+    $text .= "</tr>\n";
+}
+
+##############################################################################
+
+sub spam {
+    my %last_ip, %last_time;
+    my $spam_detected = 0;
+    my $current_time = time;
+
+    # Get latest ip's for each file
+    if (-e $spamcheck_filename) {
+        open(FILE, $spamcheck_filename) || die &PrintErrorPage("Can't open file '$spamcheck_filename'<br>($!)\n");
+        while (<FILE>) {
+            chomp;
+            my ($file, $ip, $timestamp) = split(/\|/);
+            $last_ip{$file}   = $ip;
+            $last_time{$file} = $timestamp;
+        }
+        close(FILE);
+    }
+
+    # Check ip if it's the same
+    if ($last_ip{$in{'file'}} eq $ENV{'REMOTE_ADDR'} && ($current_time - $last_time{$in{'file'}}) < $spam_timelimit) {
+        $spam_detected = 1;
+    } else {
+        # Save this ip
+        $last_ip{$in{'file'}}   = $ENV{'REMOTE_ADDR'};
+        $last_time{$in{'file'}} = $current_time;
+
+        open(FILE, ">$spamcheck_filename") || die &PrintErrorPage("Can't write to file '$spamcheck_filename'<br>($!)\n");
+        foreach(keys %last_ip) {
+            print FILE "$_|$last_ip{$_}|$last_time{$_}\n";
+        }
+        close(FILE);
+    }
+
+    if ($spam_detected) {
+        if ($enable_spam_redirection) {
+            print "Location: $spam_url\n\n";
+        } else {
+            print "Location: $ENV{'HTTP_REFERER'}\n\n";
+        }
+        exit;
+    }
+}
+
+##############################################################################
+
+sub censor {
+    if (&badWords) {
+        if ($enable_censor_redirection) {
+            print "Location: $censor_url\n\n";
+        } else {
+            print "Location: $ENV{'HTTP_REFERER'}\n\n";
+        }
+        exit;
+    }
+}
+
+##############################################################################
+
+sub badWords {
+    my $result = 0;
+
+    foreach $badword (@badwords) {
+        if ($in{'msg'} =~ /($badword)/i || $in{'who'} =~ /($badword)/i) {
+            if ($enable_scrambling) {
+                $in{'msg'} =~ s/($badword)/$scramble_string/gi;
+                $in{'who'} =~ s/($badword)/$scramble_string/gi;
+            } else {
+                $result = 1;
+                last;
+            }
+        }
+    }
+
+    return $result;
+}
+
+##############################################################################
+
+sub GetDateString {
+    my $formatstring = $dateformat;
+    my %datestr;
+    my ($sec, $min, $hour, $day, $month, $year, $weekday) = localtime($^T);
+
+    $datestr{'sec'} = $sec;
+    $datestr{'sec0'} = sprintf("%02d", $sec);
+
+    $datestr{'min'} = $min;
+    $datestr{'min0'} = sprintf("%02d", $min);
+
+    $datestr{'hour24'} = $hour;
+    $datestr{'hour240'} = sprintf("%02d", $hour);
+
+    $datestr{'ampm'} = ($hour > 12) ? 'pm' : 'am';
+
+     $hour -= 12 if $hour > 12;
+     $hour = 12 if ($hour == 0);
+
+    $datestr{'hour'} = $hour;
+    $datestr{'hour0'} = sprintf("%02d", $hour);
+
+    $datestr{'day'} = $day;
+    $datestr{'day0'} = sprintf("%02d", $day);
+
+    $datestr{'dayname'} = $daynames[$weekday];
+    $datestr{'daynameshort'} = substr($daynames[$weekday], 0, 3);
+
+    $datestr{'month'} = $month + 1;
+    $datestr{'month0'} = sprintf("%02d", $month + 1);
+    $datestr{'monthname'} = $monthnames[$month];
+    $datestr{'monthnameshort'} = substr($monthnames[$month], 0, 3);
+
+    $datestr{'year'} = 1900 + $year;
+    $datestr{'shortyear'} = sprintf("%02d", $year % 100);
+
+    while ($formatstring =~ /\[([^\]]+)\]/) {
+        my $tag = $1;
+        $formatstring =~ s/\[$tag\]/$datestr{$tag}/;
+    }
+
+    return $formatstring;
+}
+
+##############################################################################
+
+sub ReadParse {
+    my $buffer;
+    my @pairs;
+
+    if ($ENV{'REQUEST_METHOD'} eq 'GET') {
+        @pairs = split(/&/, $ENV{'QUERY_STRING'});
+    } elsif ($ENV{'REQUEST_METHOD'} eq 'POST') {
+        read(STDIN, $buffer, $ENV{'CONTENT_LENGTH'});
+        @pairs = split(/&/, $buffer);
+    }
+
+    foreach (@pairs) {
+        local($key, $val) = split(/=/);
+
+        $key  =~ tr/+/ /;
+        $val =~ tr/+/ /;
+
+        $key  =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+        $val =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
+
+        # Strip dangerous characters, removes HTML and SSI for example
+        $val =~ s/<([^>]|\n)*>//g;
+
+        $in{$key} = $val;
+    }
+}
+
+##############################################################################
+
+sub PrintErrorPage {
+    print "Content-type: text/html\n\n";
+
+    print "<html><head><title>Script error!</title></head><body>";
+    print "<b>Script error!</b><p>\n";
+    print $_[0]."<p>\n";
+    print "<b>Current Server Variables:</b> (might be useful)<br>\n";
+
+    foreach(keys %ENV) {
+        print "$_ : $ENV{$_}<br>\n";
+    }
+
+    print "</body></html>";
+}

@@ -1,0 +1,5 @@
+notes about the website:
+
+fonts for the party names:
+
+AvantGarde BK BT - Bold - Size: 12 - Text effects: Antialias - Alignment: Center - Floating
